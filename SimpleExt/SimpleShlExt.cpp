@@ -64,7 +64,7 @@ STDMETHODIMP CSimpleShlExt::QueryContextMenu (
 }
 
 STDMETHODIMP CSimpleShlExt::GetCommandString (
-    UINT idCmd, UINT uFlags, UINT* pwReserved, LPSTR pszName, UINT cchMax )
+    UINT_PTR idCmd, UINT uFlags, UINT* pwReserved, LPSTR pszName, UINT cchMax )
 {
 USES_CONVERSION;
 
