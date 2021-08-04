@@ -6,7 +6,8 @@
 # User-specific files
 *.rsuser
 *.suo
-*.user
+# KirkG: I am re-enabling this, so as to pick up foo.vcxproj.user
+#*.user
 *.userosscache
 *.sln.docstates
 
