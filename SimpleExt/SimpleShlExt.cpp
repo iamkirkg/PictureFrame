@@ -11,38 +11,52 @@
 STDMETHODIMP CSimpleShlExt::Initialize (
     LPCITEMIDLIST pidlFolder, LPDATAOBJECT pDataObj, HKEY hProgID )
 {
-FORMATETC fmt = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-STGMEDIUM stg = { TYMED_HGLOBAL };
-HDROP     hDrop;
+    FORMATETC fmt = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    STGMEDIUM stg = { TYMED_HGLOBAL };
+    HDROP     hDrop;
+    TCHAR szMsg[MAX_PATH + 32];
 
     // Look for CF_HDROP data in the data object.
     if ( FAILED( pDataObj->GetData ( &fmt, &stg ) ))
         {
         // Nope! Return an "invalid argument" error back to Explorer.
+        OutputDebugString("Initialize: GetData failed\n");
         return E_INVALIDARG;
         }
 
     // Get a pointer to the actual data.
     hDrop = (HDROP) GlobalLock ( stg.hGlobal );
-
-    // Make sure it worked.
-    if ( NULL == hDrop )
+    if (NULL == hDrop)
+    {
+        OutputDebugString("Initialize: GlobalLock failed\n");
         return E_INVALIDARG;
+    }
 
     // Sanity check - make sure there is at least one filename.
-UINT uNumFiles = DragQueryFile ( hDrop, 0xFFFFFFFF, NULL, 0 );
-HRESULT hr = S_OK;
+    UINT uNumFiles = DragQueryFile ( hDrop, 0xFFFFFFFF, NULL, 0 );
 
-    if ( 0 == uNumFiles )
+    wsprintf(szMsg, _T("Initialize, count of files = %d\n"), uNumFiles);
+    OutputDebugString(szMsg);
+
+    HRESULT hr = E_INVALIDARG;
+
+    if (0 == uNumFiles)
         {
-        GlobalUnlock ( stg.hGlobal );
-        ReleaseStgMedium ( &stg );
-        return E_INVALIDARG;
+        OutputDebugString("Initialize: DragQueryFile has no files.\n");
         }
-
-    // Get the name of the first file and store it in our member variable m_szFile.
-    if ( 0 == DragQueryFile ( hDrop, 0, m_szFile, MAX_PATH ) )
-        hr = E_INVALIDARG;
+    else
+        {
+        for (int i = 0; i <= uNumFiles; i++)
+            {
+            // Get the name of the next file and store it in our member variable m_szFile.
+            if (0 != DragQueryFile(hDrop, i, m_szFile, MAX_PATH))
+                {
+                wsprintf(szMsg, _T("Initialize: DragQueryFile[%d] = %s\n"), i, m_szFile);
+                OutputDebugString(szMsg);
+                hr = S_OK;
+                }
+            }
+        }
 
     GlobalUnlock ( stg.hGlobal );
     ReleaseStgMedium ( &stg );
@@ -54,11 +68,14 @@ STDMETHODIMP CSimpleShlExt::QueryContextMenu (
     HMENU hmenu, UINT uMenuIndex, UINT uidFirstCmd,
     UINT uidLastCmd, UINT uFlags )
 {
+    OutputDebugString("QueryContextMenu\n");
+
     // If the flags include CMF_DEFAULTONLY then we shouldn't do anything.
     if ( uFlags & CMF_DEFAULTONLY )
         return MAKE_HRESULT ( SEVERITY_SUCCESS, FACILITY_NULL, 0 );
 
-    InsertMenu ( hmenu, uMenuIndex, MF_BYPOSITION, uidFirstCmd, _T("SimpleShlExt Test Item") );
+    //DebugBreak();
+    InsertMenu ( hmenu, uMenuIndex, MF_BYPOSITION, uidFirstCmd, _T("KirkG2 SimpleShlExt Test Item") );
 
     return MAKE_HRESULT ( SEVERITY_SUCCESS, FACILITY_NULL, 1 );
 }
@@ -67,6 +84,8 @@ STDMETHODIMP CSimpleShlExt::GetCommandString (
     UINT_PTR idCmd, UINT uFlags, UINT* pwReserved, LPSTR pszName, UINT cchMax )
 {
 USES_CONVERSION;
+
+    OutputDebugString("GetCommandString\n");
 
     // Check idCmd, it must be 0 since we have only one menu item.
     if ( 0 != idCmd )
@@ -98,6 +117,8 @@ USES_CONVERSION;
 
 STDMETHODIMP CSimpleShlExt::InvokeCommand ( LPCMINVOKECOMMANDINFO pCmdInfo )
 {
+    OutputDebugString("InvokeCommand\n");
+
     // If lpVerb really points to a string, ignore this function call and bail out.
     if ( 0 != HIWORD( pCmdInfo->lpVerb ) )
         return E_INVALIDARG;

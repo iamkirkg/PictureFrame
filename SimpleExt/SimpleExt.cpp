@@ -24,6 +24,8 @@ END_OBJECT_MAP()
 extern "C"
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 {
+    OutputDebugString("DllMain\n");
+
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         _Module.Init(ObjectMap, hInstance, &LIBID_SIMPLEEXTLib);
@@ -39,6 +41,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 
 STDAPI DllCanUnloadNow()
 {
+    OutputDebugString("DllCanUnloadNow\n");
     return (_Module.GetLockCount()==0) ? S_OK : S_FALSE;
 }
 
@@ -47,6 +50,7 @@ STDAPI DllCanUnloadNow()
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
+    OutputDebugString("DllGetClassObject\n");
     return _Module.GetClassObject(rclsid, riid, ppv);
 }
 
@@ -63,6 +67,8 @@ STDAPI DllRegisterServer()
     // bug in that it requests KEY_ALL_ACCESS to the key.  That will fail if the
     // user is not an administrator.  (The code should request KEY_WRITE, which
     // is all that's necessary.)
+
+    OutputDebugString("DllRegisterServer\n");
 
     if ( 0 == (GetVersion() & 0x80000000UL) )
         {
@@ -95,6 +101,8 @@ STDAPI DllUnregisterServer()
     // If we're on NT, remove ourselves from the list of approved shell extensions.
     // Note that if we get an error along the way, I don't bail out since I want
     // to do the normal ATL unregistration stuff too.
+
+    OutputDebugString("DllUnRegisterServer\n");
 
     if ( 0 == (GetVersion() & 0x80000000UL) )
         {
